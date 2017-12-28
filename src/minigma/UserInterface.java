@@ -43,12 +43,13 @@ public final class UserInterface extends JPanel implements ActionListener {
 	String[] words;
 	BufferedImage originalPuzzle;
 	ArrayList<Integer> arrayBlack, arrayWhite, availableList;
-	String dayname = "04-10", isReveal = "f";
+	String dayname = "11-10", isReveal = "f";
 	boolean isOnline, isSolve = false;
 	int isSolving = -1;
 	JButton[] rectangles;
 	Rectangle selected;
 	char c;
+	char[][][] result;
 	double x, y;
 	char[] enteredChars;
 	JButton button11, button12, button13, button14, button15, button21, button22, button23, button24, button25;
@@ -61,10 +62,11 @@ public final class UserInterface extends JPanel implements ActionListener {
 	int[] lengths;
 	int[] startingLocations;
 	boolean found = false;
-	boolean completed = false;		
+	boolean completed = false;
 	char[][] finalBoard;
 	Solver solver;
-	
+	boolean enough = false;
+
 	public UserInterface(boolean isOnline) throws IOException {
 
 		this.isOnline = isOnline;
@@ -72,7 +74,7 @@ public final class UserInterface extends JPanel implements ActionListener {
 		words = new String[10];
 		enteredChars = new char[25];
 		finalBoard = new char[5][5];
-		
+
 		setLayout(null);
 		setBackground(new Color(130, 130, 130));
 		JFrame frame = new JFrame();
@@ -191,9 +193,9 @@ public final class UserInterface extends JPanel implements ActionListener {
 
 		add(quit);
 		add(reveal);
-		// add(reset);
+		add(reset);
 		add(solve);
-		add(reset2);
+		// add(reset2);
 		add(title);
 		// add(right);
 		// add(left);
@@ -250,8 +252,106 @@ public final class UserInterface extends JPanel implements ActionListener {
 			if (rectangles[i] != null)
 				add(rectangles[i]);
 		}
-		
-		solver = new Solver(myArr, startingLocations, lengths);
+
+		result = new char[32][][];
+		for (int i = 0; i < 32; i++) {
+			result[i] = new char[5][];
+			for (int j = 0; j < 5; j++) {
+				result[i][j] = new char[5];
+			}
+		}
+
+		startingLocations = new int[10];
+		lengths = new int[10];
+
+		if (dayname.equals("11-10")) {
+			// across
+			startingLocations[0] = 0;
+			startingLocations[1] = 5;
+			startingLocations[2] = 10;
+			startingLocations[3] = 15;
+			startingLocations[4] = 20;
+
+			// down
+			startingLocations[5] = 0;
+			startingLocations[6] = 1;
+			startingLocations[7] = 2;
+			startingLocations[8] = 3;
+			startingLocations[9] = 4;
+
+			// across
+			lengths[0] = 5;
+			lengths[1] = 5;
+			lengths[2] = 5;
+			lengths[3] = 5;
+			lengths[4] = 5;
+
+			// down
+			lengths[5] = 5;
+			lengths[6] = 5;
+			lengths[7] = 5;
+			lengths[8] = 5;
+			lengths[9] = 5;
+
+		} else if (dayname.equals("04-10")) {
+			// across
+			startingLocations[0] = 1;
+			startingLocations[1] = 6;
+			startingLocations[2] = 10;
+			startingLocations[3] = 15;
+			startingLocations[4] = 20;
+
+			// down
+			startingLocations[5] = 1;
+			startingLocations[6] = 2;
+			startingLocations[7] = 3;
+			startingLocations[8] = 4;
+			startingLocations[9] = 10;
+
+			// across
+			lengths[0] = 4;
+			lengths[1] = 4;
+			lengths[2] = 5;
+			lengths[3] = 5;
+			lengths[4] = 5;
+
+			// down
+			lengths[5] = 5;
+			lengths[6] = 5;
+			lengths[7] = 5;
+			lengths[8] = 3;
+			lengths[9] = 3;
+		} else {
+			// across
+			startingLocations[0] = 1;
+			startingLocations[1] = 5;
+			startingLocations[2] = 10;
+			startingLocations[3] = 15;
+			startingLocations[4] = 21;
+
+			// down
+			startingLocations[5] = 1;
+			startingLocations[6] = 2;
+			startingLocations[7] = 3;
+			startingLocations[8] = 5;
+			startingLocations[9] = 9;
+
+			// across
+			lengths[0] = 3;
+			lengths[1] = 5;
+			lengths[2] = 5;
+			lengths[3] = 5;
+			lengths[4] = 5;
+
+			// down
+			lengths[5] = 5;
+			lengths[6] = 5;
+			lengths[7] = 5;
+			lengths[8] = 5;
+			lengths[9] = 3;
+		}
+
+		// solver = new Solver(myArr, startingLocations, lengths);
 
 		frame.add(this);
 		frame.setExtendedState(JFrame.MAXIMIZED_BOTH);
@@ -273,9 +373,8 @@ public final class UserInterface extends JPanel implements ActionListener {
 				} catch (IOException ex) {
 					ex.printStackTrace();
 				}
-			}
-			else {
-				dayname = "14-12";
+			} else {
+				dayname = "21-12";
 			}
 
 			page.drawImage(originalPuzzle, 1000, 50, 400, 300, this);
@@ -313,9 +412,6 @@ public final class UserInterface extends JPanel implements ActionListener {
 			g2.setColor(Color.black);
 			arrayWhite = new ArrayList<>();
 
-			startingLocations = new int[availableList.size()+2];
-			lengths = new int[availableList.size()+2];
-			
 			for (int i = 1; i < 26; i++) {
 				if (!arrayBlack.contains(i)) {
 					arrayWhite.add(i);
@@ -345,65 +441,40 @@ public final class UserInterface extends JPanel implements ActionListener {
 			// length[i] =
 			// }
 
-			if (dayname.equals("11-10")) {
-				// across
-				startingLocations[0] = 0;
-				startingLocations[1] = 5;
-				startingLocations[2] = 10;
-				startingLocations[3] = 15;
-				startingLocations[4] = 20;
-
-				// down
-				startingLocations[5] = 0;
-				startingLocations[6] = 1;
-				startingLocations[7] = 2;
-				startingLocations[8] = 3;
-				startingLocations[9] = 4;
-
-
-				//across
-				lengths[0] = 5;
-				lengths[1] = 5;
-				lengths[2] = 5;
-				lengths[3] = 5;
-				lengths[4] = 5;
+			 if(toSolve) {
+				try {
+					if(!enough) {
+						for(int a = 0; a < 32; a++){
+							for (int i = 0; i < 5; i++) {
+								for (int j = 0; j < 5; j++) {
+									g2.setColor(Color.black);
+									page.drawString(""+result[a][i][j],  fromLeft + j * width + 10, fromUp + i * width + 10);
+									
+								}
+							}
+							if(a == 31)
+								enough=true;
+						}	
+					}
+					
+						
+				} catch(Exception e) {
+					
+				}
 				
-				//down
-				lengths[5] = 5;
-				lengths[6] = 5;
-				lengths[7] = 5;
-				lengths[8] = 5;
-			}
-			else {
-				// across
-				startingLocations[0] = 1;
-				startingLocations[1] = 6;
-				startingLocations[2] = 10;
-				startingLocations[3] = 15;
-				startingLocations[4] = 20;
-
-				// down
-				startingLocations[5] = 1;
-				startingLocations[6] = 2;
-				startingLocations[7] = 3;
-				startingLocations[8] = 4;
-				startingLocations[9] = 10;
-
-				//across
-				lengths[0] = 4;
-				lengths[1] = 4;
-				lengths[2] = 5;
-				lengths[3] = 5;
-				lengths[4] = 5;
-				
-				//down
-				lengths[5] = 5;
-				lengths[6] = 5;
-				lengths[7] = 5;
-				lengths[8] = 3;
-				lengths[9] = 3;
-			}
+			 }
 			
+			 if(dayname == "11-10") {
+				 g2.setColor(Color.black);
+//					page.drawString(""
+			 }
+			
+						
+			//// fromLeft + j * width, fromUp + i * width, width, width)
+			// }
+			//
+			// }
+			// }
 			predictions = new Object[availableList.size()][300];
 
 			g2.setFont(new java.awt.Font("Times New Roman", Font.BOLD, 13));
@@ -428,53 +499,6 @@ public final class UserInterface extends JPanel implements ActionListener {
 		} catch (IOException ex) {
 			Logger.getLogger(UserInterface.class.getName()).log(Level.SEVERE, null, ex);
 		}
-		
-//		String[] hints;
-//		hints = getClues();
-		if (toSolve) {
-			finalBoard = solver.getResultBoard();
-		}
-
-		
-		
-//			Solver solver;
-//			try {
-//				if(!found) {
-//					for (int i = 0; i < hints.length; i++) {
-//						System.out.println("Solving " + (i + 1) + "th hint");
-//						predictions[i] = f.findSolutions(hints[i], lengths[i]);
-//						for(Object o : predictions[i]) {
-//							System.out.println(o.toString());
-//						}
-//						if(i == 9) {
-//							found = true;
-//						}
-//					}
-//					solver = new Solver(finalBoard, predictions, startingLocations, lengths);
-//				}
-//					
-//				
-////				if(found && !completed) {
-////					int hintNo = 0;
-////					for (int i = 0; i < 5; i++) {
-////						for (int j = 0; j < 5; j++) {
-////							for(Object o : predictions[hintNo]) {
-////								for(int a = 0 ; a < o.toString().length(); a++) {
-////									//put things on finalBoard
-////									//fromLeft + j * width, fromUp + i * width, width, width
-////								}
-////							}
-////						}
-////					}
-////					completed = true;
-////				}
-//				
-//			}catch (Exception e) {
-//			}
-//
-//			// f.findSolutions("One who's deep in the weeds of policy",4);
-//
-//		}
 
 	}
 
@@ -482,7 +506,32 @@ public final class UserInterface extends JPanel implements ActionListener {
 	public void actionPerformed(ActionEvent event) {
 
 		Object source = event.getSource();
-		System.out.println("dd" + source.toString());
+
+		if (source == solve) {
+			toSolve = true;
+
+			String[] hints;
+			try {
+				hints = getClues();
+				char[][] initial = new char[5][];
+				for (int i = 0; i < 5; i++) {
+					initial[i] = new char[5];
+				}
+				for (int i = 0; i < 5; i++) {
+					for (int j = 0; j < 5; j++) {
+						initial[i][j] = '-';
+					}
+				}
+				if (toSolve) {
+					solver = new Solver(hints, startingLocations, lengths);
+					solver.solve(initial, 0);
+					result = solver.getResultBoard();
+
+				}
+			} catch (IOException e) {
+				e.printStackTrace();
+			}
+		}
 
 		if (source == rectangles[0]) {
 			rectangles[0].setText(c + "");
@@ -718,9 +767,7 @@ public final class UserInterface extends JPanel implements ActionListener {
 		if (source == reset) {
 			isReveal = "f";
 		}
-		if (source == solve) {
-			toSolve = true;
-		}
+
 	}
 
 	// getting clues
@@ -728,21 +775,22 @@ public final class UserInterface extends JPanel implements ActionListener {
 		int j = 0;
 		String[] clues = new String[10];
 		if (isOnline) {
-//			String url = "https://www.nytimes.com/crosswords/game/mini?page=mini&type=mini&date=&_r=0";
-//			Document document = Jsoup.connect(url).get();
-//			String html = document.html();
-//			Document doc = Jsoup.parse(html);
-//			Elements elements = doc.getElementsByClass("Clue-text--3lZl7");
-//			Elements labels = doc.getElementsByClass("Clue-label--2IdMY");
-//			for (Element e : elements) {
-//				clues[j] = labels.get(j).text() + ") " + e.text();
-//				j++;
-//				if (j == 10) {
-//					break;
-//				}
-//			}
+			// String url =
+			// "https://www.nytimes.com/crosswords/game/mini?page=mini&type=mini&date=&_r=0";
+			// Document document = Jsoup.connect(url).get();
+			// String html = document.html();
+			// Document doc = Jsoup.parse(html);
+			// Elements elements = doc.getElementsByClass("Clue-text--3lZl7");
+			// Elements labels = doc.getElementsByClass("Clue-label--2IdMY");
+			// for (Element e : elements) {
+			// clues[j] = labels.get(j).text() + ") " + e.text();
+			// j++;
+			// if (j == 10) {
+			// break;
+			// }
+			// }
 			try {
-				dayname = "14-12";
+				dayname = "21-12";
 				File f = new File("resource/" + dayname + ".txt");
 				FileReader fis = new FileReader(f);
 				BufferedReader br = new BufferedReader(fis);
@@ -782,7 +830,7 @@ public final class UserInterface extends JPanel implements ActionListener {
 				System.out.println(e);
 			}
 		}
-		
+
 		return clues;
 	}
 
@@ -816,7 +864,7 @@ public final class UserInterface extends JPanel implements ActionListener {
 
 		} else {
 			try {
-				if(!isOnline) {
+				if (!isOnline) {
 					File f = new File("resource/" + dayname + "-box.txt");
 					FileReader fis = new FileReader(f);
 					BufferedReader br = new BufferedReader(fis);
@@ -831,7 +879,7 @@ public final class UserInterface extends JPanel implements ActionListener {
 					}
 					br.close();
 				}
-				
+
 			} catch (Exception e) {
 			}
 		}
